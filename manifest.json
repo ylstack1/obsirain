@@ -1,7 +1,7 @@
 {
 	"id": "item-manager",
 	"name": "Item Manager",
-	"version": "1.0.0-beta.1",
+	"version": "1.0.0-beta.2",
 	"minAppVersion": "0.15.0",
 	"description": "A comprehensive item management plugin with CRUD operations, React dashboard, and MDX support",
 	"author": "Your Name",

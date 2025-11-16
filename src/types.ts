@@ -2,6 +2,7 @@ export interface Item {
   id: string;
   title: string;
   description: string;
+  link: string;
   tags: string[];
   folder: string;
   createdAt: string;

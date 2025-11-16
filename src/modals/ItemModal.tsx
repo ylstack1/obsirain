@@ -41,6 +41,16 @@ export class ItemModal extends Modal {
     });
     titleInput.addClass('item-modal-input');
 
+    // Link input
+    const linkContainer = contentEl.createDiv({ cls: 'item-modal-field' });
+    linkContainer.createEl('label', { text: 'Link/URL' });
+    const linkInput = linkContainer.createEl('input', {
+      type: 'url',
+      placeholder: 'Enter source URL (e.g., https://example.com)',
+      value: this.item?.link || '',
+    });
+    linkInput.addClass('item-modal-input');
+
     // Description input
     const descContainer = contentEl.createDiv({ cls: 'item-modal-field' });
     descContainer.createEl('label', { text: 'Description' });
@@ -124,6 +134,7 @@ export class ItemModal extends Modal {
       e.preventDefault();
 
       const title = titleInput.value.trim();
+      const link = linkInput.value.trim();
       const description = descInput.value.trim();
       const folder = folderSelect.value.trim(); // Use folderSelect value
       const tags = tagsInput.value
@@ -154,6 +165,7 @@ export class ItemModal extends Modal {
       const item: Item = {
         id: this.item?.id || `item-${Date.now()}`,
         title,
+        link,
         description,
         tags,
         folder,

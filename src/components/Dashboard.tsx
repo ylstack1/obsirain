@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Item } from '../types';
 import { Card } from './Card';
+import { ItemDetailView } from './ItemDetailView';
 import { Search } from './Search';
 import { TagFilter } from './TagFilter';
 import { FolderTree } from './FolderTree';
@@ -28,6 +29,29 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
+  const [viewingItem, setViewingItem] = useState<{ item: Item; path: string } | null>(null);
+
+  const handleViewItem = (item: Item, path: string) => {
+    setViewingItem({ item, path });
+  };
+
+  const handleCloseView = () => {
+    setViewingItem(null);
+  };
+
+  const handleEditFromView = (item: Item) => {
+    if (viewingItem) {
+      onEdit(item, viewingItem.path);
+      setViewingItem(null); // Close view after opening modal
+    }
+  };
+
+  const handleDeleteFromView = (item: Item) => {
+    if (viewingItem) {
+      onDelete(item, viewingItem.path);
+      setViewingItem(null); // Close view after deletion
+    }
+  };
 
   const handleTagToggle = (tag: string) => {
     setSelectedTags(prev =>
@@ -42,6 +66,17 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const handleFolderSelect = (folder: string | null) => {
     setSelectedFolder(folder);
   };
+
+  if (viewingItem) {
+    return (
+      <ItemDetailView
+        item={viewingItem.item}
+        onClose={handleCloseView}
+        onEdit={handleEditFromView}
+        onDelete={handleDeleteFromView}
+      />
+    );
+  }
 
   // Filter items
   const filteredItems = items.filter(({ item }) => {
@@ -119,6 +154,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               item={item}
               onEdit={item => onEdit(item, path)}
               onDelete={item => onDelete(item, path)}
+              onView={item => handleViewItem(item, path)}
             />
           ))
         )}

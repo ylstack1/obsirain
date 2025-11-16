@@ -5,24 +5,33 @@ interface CardProps {
   item: Item;
   onEdit: (item: Item) => void;
   onDelete: (item: Item) => void;
+  onView: (item: Item) => void;
 }
 
-export const Card: React.FC<CardProps> = ({ item, onEdit, onDelete }) => {
+export const Card: React.FC<CardProps> = ({ item, onEdit, onDelete, onView }) => {
+  const domain = item.link ? (new URL(item.link).hostname) : '';
+
   return (
-    <div className="item-card">
+    <div className="item-card" onClick={() => onView(item)}>
       <div className="item-card-header">
         <h3 className="item-card-title">{item.title}</h3>
         <div className="item-card-actions">
           <button
             className="item-card-action-btn"
-            onClick={() => onEdit(item)}
+            onClick={e => {
+              e.stopPropagation();
+              onEdit(item);
+            }}
             aria-label="Edit item"
           >
             ✏️
           </button>
           <button
             className="item-card-action-btn"
-            onClick={() => onDelete(item)}
+            onClick={e => {
+              e.stopPropagation();
+              onDelete(item);
+            }}
             aria-label="Delete item"
           >
             🗑️
@@ -30,6 +39,13 @@ export const Card: React.FC<CardProps> = ({ item, onEdit, onDelete }) => {
         </div>
       </div>
       <p className="item-card-description">{item.description}</p>
+      {item.link && (
+        <div className="item-card-link">
+          <a href={item.link} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}>
+            🔗 {domain}
+          </a>
+        </div>
+      )}
       {item.tags.length > 0 && (
         <div className="item-card-tags">
           {item.tags.map((tag, index) => (

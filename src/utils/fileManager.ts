@@ -70,28 +70,37 @@ export class FileManager {
     return items;
   }
 
-  private generateMarkdownContent(item: Item): string {
-    const frontmatter = [
-      '---',
-      `id: ${item.id}`,
-      `title: ${item.title}`,
-      `description: ${item.description}`,
-      `tags: [${item.tags.map(tag => `"${tag}"`).join(', ')}]`,
-      `folder: ${item.folder}`,
-      `createdAt: ${item.createdAt}`,
-      `updatedAt: ${item.updatedAt}`,
-      '---',
-      '',
-      `# ${item.title}`,
-      '',
-      item.description,
-      '',
-    ];
-
-    return frontmatter.join('\n');
-  }
-
-  private parseMarkdownContent(content: string, filePath: string): Item | null {
+	  private generateMarkdownContent(item: Item): string {
+	    const frontmatter = [
+	      '---',
+	      `id: ${item.id}`,
+	      `title: ${item.title}`,
+	      `link: ${item.link}`,
+	      `tags: [${item.tags.map(tag => `"${tag}"`).join(', ')}]`,
+	      `collectionPath: ${item.folder}`,
+	      `created: ${item.createdAt}`,
+	      `lastupdate: ${item.updatedAt}`,
+	      '---',
+	      '',
+	      `# ${item.title}`,
+	      '',
+	      `## Description`,
+	      item.description,
+	      '',
+	      `---`,
+	      `## Details`,
+	      `- **Link**: [Source](${item.link})`,
+	      `- **Collection**: ${item.folder}`,
+	      `- **Tags**: ${item.tags.join(', ')}`,
+	      `- **Created**: ${new Date(item.createdAt).toLocaleDateString()}`,
+	      `- **Updated**: ${new Date(item.updatedAt).toLocaleDateString()}`,
+	      '',
+	    ];
+	
+	    return frontmatter.join('\n');
+	  }
+	
+	  private parseMarkdownContent(content: string, filePath: string): Item | null {
     const frontmatterRegex = /^---\n([\s\S]*?)\n---/;
     const match = content.match(frontmatterRegex);
 
@@ -107,10 +116,10 @@ export class FileManager {
       const colonIndex = line.indexOf(':');
       if (colonIndex === -1) continue;
 
-      const key = line.substring(0, colonIndex).trim();
-      const value = line.substring(colonIndex + 1).trim();
-
-      if (key === 'tags') {
+	      const key = line.substring(0, colonIndex).trim();
+	      let value = line.substring(colonIndex + 1).trim();
+	
+	      if (key === 'tags') {
         // Parse tags array
         const tagsMatch = value.match(/\[(.*?)\]/);
         if (tagsMatch) {
@@ -126,21 +135,27 @@ export class FileManager {
       }
     }
 
-    // Validate required fields
-    if (!data.id || !data.title) {
-      return null;
-    }
-
-    return {
-      id: typeof data.id === 'string' ? data.id : '',
-      title: typeof data.title === 'string' ? data.title : '',
-      description: typeof data.description === 'string' ? data.description : '',
-      tags: Array.isArray(data.tags) ? data.tags : [],
-      folder: typeof data.folder === 'string' ? data.folder : filePath.substring(0, filePath.lastIndexOf('/')),
-      createdAt: typeof data.createdAt === 'string' ? data.createdAt : new Date().toISOString(),
-      updatedAt: typeof data.updatedAt === 'string' ? data.updatedAt : new Date().toISOString(),
-    };
-  }
+	    // Validate required fields
+	    if (!data.id || !data.title) {
+	      return null;
+	    }
+	
+	    // Handle new/renamed frontmatter keys
+	    const folder = (typeof data.collectionPath === 'string' ? data.collectionPath : typeof data.folder === 'string' ? data.folder : filePath.substring(0, filePath.lastIndexOf('/')));
+	    const createdAt = typeof data.created === 'string' ? data.created : typeof data.createdAt === 'string' ? data.createdAt : new Date().toISOString();
+	    const updatedAt = typeof data.lastupdate === 'string' ? data.lastupdate : typeof data.updatedAt === 'string' ? data.updatedAt : new Date().toISOString();
+	
+	    return {
+	      id: typeof data.id === 'string' ? data.id : '',
+	      title: typeof data.title === 'string' ? data.title : '',
+	      description: typeof data.description === 'string' ? data.description : '',
+	      link: typeof data.link === 'string' ? data.link : '',
+	      tags: Array.isArray(data.tags) ? data.tags : [],
+	      folder: folder,
+	      createdAt: createdAt,
+	      updatedAt: updatedAt,
+	    };
+	  }
 
   private async ensureFolderExists(folderPath: string): Promise<void> {
     const normalizedPath = normalizePath(folderPath);

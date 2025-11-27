@@ -1,0 +1,81 @@
+name: Version Bump
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version bump type or specific version'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+          - prerelease
+          - custom
+      custom_version:
+        description: 'Custom version (only used if "custom" is selected)'
+        required: false
+        type: string
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Bump version
+        id: bump
+        run: |
+          if [ "${{ github.event.inputs.version }}" == "custom" ]; then
+            if [ -z "${{ github.event.inputs.custom_version }}" ]; then
+              echo "Error: Custom version not provided"
+              exit 1
+            fi
+            npm version ${{ github.event.inputs.custom_version }} --no-git-tag-version
+            NEW_VERSION="${{ github.event.inputs.custom_version }}"
+          else
+            npm version ${{ github.event.inputs.version }} --no-git-tag-version
+            NEW_VERSION=$(node -p "require('./package.json').version")
+          fi
+          echo "new_version=${NEW_VERSION}" >> $GITHUB_OUTPUT
+          echo "Bumped version to ${NEW_VERSION}"
+
+      - name: Commit changes
+        run: |
+          git add package.json manifest.json versions.json
+          git commit -m "chore: bump version to ${{ steps.bump.outputs.new_version }}"
+          git push origin HEAD:${{ github.ref_name }}
+
+      - name: Create summary
+        run: |
+          echo "## Version Bump Complete! 🚀" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "New version: **${{ steps.bump.outputs.new_version }}**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Next Steps:" >> $GITHUB_STEP_SUMMARY
+          echo "1. Review the version bump commit" >> $GITHUB_STEP_SUMMARY
+          echo "2. Create a git tag: \`git tag ${{ steps.bump.outputs.new_version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "3. Push the tag: \`git push origin ${{ steps.bump.outputs.new_version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "4. Or use the Release workflow with manual dispatch" >> $GITHUB_STEP_SUMMARY

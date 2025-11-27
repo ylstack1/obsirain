@@ -31,6 +31,17 @@ A comprehensive, production-ready Obsidian plugin for managing items with full C
 
 ## Installation
 
+### From GitHub Releases (Recommended)
+
+1. Download the latest release from [GitHub Releases](https://github.com/yaeyintlin199/obsidian-sample-plugin/releases)
+2. Extract the following files from the release:
+   - `main.js`
+   - `manifest.json`
+   - `styles.css`
+3. Create a folder called `item-manager` in your vault's `.obsidian/plugins/` directory
+4. Copy the downloaded files into the `item-manager` folder
+5. Reload Obsidian and enable the plugin in **Settings → Community plugins**
+
 ### From Source
 
 1. Clone this repository into your vault's plugins folder:
@@ -270,6 +281,37 @@ Manual testing workflow:
    - Special characters in titles
    - Long titles and descriptions
    - Nested folders
+
+## Releases
+
+This project uses automated GitHub Actions workflows for versioning and releasing.
+
+### Creating a Release
+
+**For maintainers:**
+
+1. **Navigate to GitHub Actions** in the repository
+2. **Select "Release Obsidian Plugin"** workflow
+3. **Click "Run workflow"** and enter the version (e.g., `1.0.0` or `1.0.0-beta.3`)
+4. The workflow will automatically:
+   - Build the plugin
+   - Create a GitHub release
+   - Upload all required artifacts
+
+For detailed instructions, see [RELEASE.md](RELEASE.md).
+
+### Release Artifacts
+
+Each release includes:
+- `main.js` - Bundled plugin code
+- `manifest.json` - Plugin metadata
+- `styles.css` - Plugin styles
+- `versions.json` - Version compatibility mapping
+- `checksums.txt` - SHA256 checksums for verification
+
+### Version History
+
+See [GitHub Releases](https://github.com/yaeyintlin199/obsidian-sample-plugin/releases) for the full version history and changelogs.
 
 ## Mobile Compatibility
 

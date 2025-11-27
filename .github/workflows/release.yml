@@ -1,0 +1,152 @@
+name: Release Obsidian Plugin
+
+on:
+  push:
+    tags:
+      - "*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.0.0, 1.0.0-beta.3)'
+        required: true
+        type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Update version (manual workflow)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          npm version ${{ github.event.inputs.version }} --no-git-tag-version
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.json manifest.json versions.json
+          git commit -m "chore: bump version to ${{ github.event.inputs.version }}"
+          git tag ${{ github.event.inputs.version }}
+          git push origin HEAD:${{ github.ref_name }}
+          git push origin ${{ github.event.inputs.version }}
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build plugin
+        run: npm run build
+
+      - name: Verify build artifacts
+        run: |
+          if [ ! -f main.js ]; then
+            echo "Error: main.js not found after build"
+            exit 1
+          fi
+          if [ ! -f manifest.json ]; then
+            echo "Error: manifest.json not found"
+            exit 1
+          fi
+          echo "Build artifacts verified successfully"
+
+      - name: Create release directory
+        run: |
+          mkdir -p release
+          cp main.js release/
+          cp manifest.json release/
+          cp versions.json release/
+          if [ -f styles.css ]; then
+            cp styles.css release/
+          fi
+
+      - name: Generate checksums
+        run: |
+          cd release
+          sha256sum main.js > checksums.txt
+          sha256sum manifest.json >> checksums.txt
+          if [ -f styles.css ]; then
+            sha256sum styles.css >> checksums.txt
+          fi
+          cat checksums.txt
+
+      - name: Create release notes
+        id: release_notes
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          PLUGIN_NAME=$(jq -r '.name' manifest.json)
+          PLUGIN_DESC=$(jq -r '.description' manifest.json)
+          MIN_APP_VERSION=$(jq -r '.minAppVersion' manifest.json)
+          
+          cat > release-notes.md << EOF
+          # ${PLUGIN_NAME} ${VERSION}
+          
+          ${PLUGIN_DESC}
+          
+          ## Installation
+          
+          ### Manual Installation
+          1. Download \`main.js\`, \`manifest.json\`, and \`styles.css\` (if present)
+          2. Create a folder named \`item-manager\` in your vault's \`.obsidian/plugins/\` directory
+          3. Copy the downloaded files into the folder
+          4. Reload Obsidian
+          5. Enable the plugin in Settings → Community plugins
+          
+          ### BRAT Installation (Beta Reviewers Auto-update Tester)
+          1. Install the BRAT plugin from the Obsidian community plugins
+          2. Add this repository to BRAT
+          3. BRAT will automatically install and update the plugin
+          
+          ## Requirements
+          - Minimum Obsidian version: ${MIN_APP_VERSION}
+          
+          ## Changes in this version
+          Please see the commit history for detailed changes in this release.
+          
+          ## Verification
+          SHA256 checksums for release artifacts:
+          \`\`\`
+          $(cat release/checksums.txt)
+          \`\`\`
+          EOF
+          
+          echo "Release notes generated successfully"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: ${{ steps.version.outputs.version }}
+          body_path: release-notes.md
+          files: |
+            release/main.js
+            release/manifest.json
+            release/styles.css
+            release/versions.json
+            release/checksums.txt
+          draft: false
+          prerelease: ${{ contains(steps.version.outputs.version, 'beta') || contains(steps.version.outputs.version, 'alpha') || contains(steps.version.outputs.version, 'rc') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update latest release tag
+        if: ${{ !contains(steps.version.outputs.version, 'beta') && !contains(steps.version.outputs.version, 'alpha') && !contains(steps.version.outputs.version, 'rc') }}
+        run: |
+          git tag -f latest
+          git push origin latest --force

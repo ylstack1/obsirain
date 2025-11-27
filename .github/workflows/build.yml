@@ -1,0 +1,133 @@
+name: Build and Validate
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - develop
+      - 'feat/**'
+      - 'fix/**'
+  pull_request:
+    branches:
+      - main
+      - master
+      - develop
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run build
+        env:
+          CI: true
+
+      - name: Verify build artifacts
+        run: |
+          if [ ! -f main.js ]; then
+            echo "❌ Error: main.js not found after build"
+            exit 1
+          fi
+          echo "✅ main.js generated successfully"
+          
+          if [ ! -f manifest.json ]; then
+            echo "❌ Error: manifest.json not found"
+            exit 1
+          fi
+          echo "✅ manifest.json found"
+          
+          # Check if styles.css exists (optional but log it)
+          if [ -f styles.css ]; then
+            echo "✅ styles.css found"
+          else
+            echo "ℹ️ styles.css not present (optional)"
+          fi
+
+      - name: Validate manifest.json
+        run: |
+          # Validate manifest has required fields
+          PLUGIN_ID=$(jq -r '.id' manifest.json)
+          PLUGIN_NAME=$(jq -r '.name' manifest.json)
+          VERSION=$(jq -r '.version' manifest.json)
+          MIN_APP_VERSION=$(jq -r '.minAppVersion' manifest.json)
+          
+          if [ "$PLUGIN_ID" == "null" ] || [ -z "$PLUGIN_ID" ]; then
+            echo "❌ Error: manifest.json missing 'id' field"
+            exit 1
+          fi
+          
+          if [ "$PLUGIN_NAME" == "null" ] || [ -z "$PLUGIN_NAME" ]; then
+            echo "❌ Error: manifest.json missing 'name' field"
+            exit 1
+          fi
+          
+          if [ "$VERSION" == "null" ] || [ -z "$VERSION" ]; then
+            echo "❌ Error: manifest.json missing 'version' field"
+            exit 1
+          fi
+          
+          if [ "$MIN_APP_VERSION" == "null" ] || [ -z "$MIN_APP_VERSION" ]; then
+            echo "❌ Error: manifest.json missing 'minAppVersion' field"
+            exit 1
+          fi
+          
+          echo "✅ Manifest validation passed"
+          echo "Plugin ID: $PLUGIN_ID"
+          echo "Plugin Name: $PLUGIN_NAME"
+          echo "Version: $VERSION"
+          echo "Min App Version: $MIN_APP_VERSION"
+
+      - name: Check version consistency
+        run: |
+          PKG_VERSION=$(jq -r '.version' package.json)
+          MANIFEST_VERSION=$(jq -r '.version' manifest.json)
+          
+          if [ "$PKG_VERSION" != "$MANIFEST_VERSION" ]; then
+            echo "⚠️ Warning: Version mismatch between package.json ($PKG_VERSION) and manifest.json ($MANIFEST_VERSION)"
+            echo "This may cause issues. Consider running 'npm version <version>' to sync them."
+            exit 1
+          else
+            echo "✅ Version consistency check passed: $PKG_VERSION"
+          fi
+
+      - name: Generate build summary
+        if: success()
+        run: |
+          echo "## Build Summary ✅" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Build Status:** Success" >> $GITHUB_STEP_SUMMARY
+          echo "**Plugin:** $(jq -r '.name' manifest.json)" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** $(jq -r '.version' manifest.json)" >> $GITHUB_STEP_SUMMARY
+          echo "**Min Obsidian Version:** $(jq -r '.minAppVersion' manifest.json)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Artifacts Generated:" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ main.js ($(wc -c < main.js | numfmt --to=iec-i --suffix=B --format='%.2f'))" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ manifest.json" >> $GITHUB_STEP_SUMMARY
+          if [ -f styles.css ]; then
+            echo "- ✅ styles.css ($(wc -c < styles.css | numfmt --to=iec-i --suffix=B --format='%.2f'))" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: obsidian-plugin-${{ github.sha }}
+          path: |
+            main.js
+            manifest.json
+            styles.css
+            versions.json
+          retention-days: 30

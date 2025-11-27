@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Item, TreeNode } from '../types';
 import { Card } from './Card';
 import { Search } from './Search';
 import { TagFilter } from './TagFilter';
 import { FolderTree } from './FolderTree';
 import { AddButton } from './AddButton';
+import { ItemDetailModal, FolderFilterState } from './ItemDetailModal';
 
 interface DashboardProps {
   items: Array<{ item: Item; path: string }>;
@@ -14,7 +15,7 @@ interface DashboardProps {
   onEdit: (item: Item, path: string) => void;
   onDelete: (item: Item, path: string) => void;
   onRefresh: () => void;
-  onView: (item: Item, path: string) => void;
+  onVisit: (path: string) => void;
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({
@@ -25,17 +26,29 @@ export const Dashboard: React.FC<DashboardProps> = ({
   onEdit,
   onDelete,
   onRefresh,
-  onView,
+  onVisit,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
+  const [activeItemPath, setActiveItemPath] = useState<string | null>(null);
+  const [folderFilters, setFolderFilters] = useState<FolderFilterState>({
+    include: [],
+    exclude: [],
+  });
 
-  // The plugin's main.tsx will handle opening the detail view in a new tab
-  const handleViewItem = (item: Item, path: string) => {
-    // This function is now passed down from ItemView and calls plugin.openItemDetailView
-    // The ItemView will pass a prop to handle this
-    // For now, we'll assume the prop is passed down correctly
+  useEffect(() => {
+    if (activeItemPath && !items.some(({ path }) => path === activeItemPath)) {
+      setActiveItemPath(null);
+    }
+  }, [activeItemPath, items]);
+
+  const handleOpenDetail = (_item: Item, path: string) => {
+    setActiveItemPath(path);
+  };
+
+  const handleCloseDetail = () => {
+    setActiveItemPath(null);
   };
 
   const handleTagToggle = (tag: string) => {
@@ -52,11 +65,43 @@ export const Dashboard: React.FC<DashboardProps> = ({
     setSelectedFolder(folder);
   };
 
-  // The ItemDetailView component is now a separate view/tab, so we remove this block.
+  const handleFolderFilterToggle = (folder: string, mode: 'include' | 'exclude') => {
+    setFolderFilters(prev => {
+      const includeSet = new Set(prev.include);
+      const excludeSet = new Set(prev.exclude);
 
-  // Filter items
+      if (mode === 'include') {
+        if (includeSet.has(folder)) {
+          includeSet.delete(folder);
+        } else {
+          includeSet.add(folder);
+          excludeSet.delete(folder);
+        }
+      } else {
+        if (excludeSet.has(folder)) {
+          excludeSet.delete(folder);
+        } else {
+          excludeSet.add(folder);
+          includeSet.delete(folder);
+        }
+      }
+
+      return {
+        include: Array.from(includeSet),
+        exclude: Array.from(excludeSet),
+      };
+    });
+  };
+
+  const handleClearFolderFilters = () => {
+    setFolderFilters({ include: [], exclude: [] });
+  };
+
+  const activeItemData = activeItemPath
+    ? items.find(({ path }) => path === activeItemPath) ?? null
+    : null;
+
   const filteredItems = items.filter(({ item }) => {
-    // Search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       const matchesSearch =
@@ -66,15 +111,27 @@ export const Dashboard: React.FC<DashboardProps> = ({
       if (!matchesSearch) return false;
     }
 
-    // Tag filter
     if (selectedTags.length > 0) {
       const hasSelectedTag = selectedTags.some(tag => item.tags.includes(tag));
       if (!hasSelectedTag) return false;
     }
 
-    // Folder filter
     if (selectedFolder) {
       if (!item.folder.startsWith(selectedFolder)) return false;
+    }
+
+    if (folderFilters.include.length > 0) {
+      const matchesIncluded = folderFilters.include.some(folder =>
+        item.folder.startsWith(folder)
+      );
+      if (!matchesIncluded) return false;
+    }
+
+    if (folderFilters.exclude.length > 0) {
+      const matchesExcluded = folderFilters.exclude.some(folder =>
+        item.folder.startsWith(folder)
+      );
+      if (matchesExcluded) return false;
     }
 
     return true;
@@ -105,10 +162,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
               selectedFolder={selectedFolder}
               onFolderSelect={handleFolderSelect}
               onItemSelect={(path) => {
-                // Find the item and open the detail view
                 const itemData = items.find(i => i.path === path);
                 if (itemData) {
-                  onView(itemData.item, itemData.path);
+                  handleOpenDetail(itemData.item, itemData.path);
                 }
               }}
             />
@@ -123,30 +179,44 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </div>
 
           <div className="item-dashboard-grid">
-        {filteredItems.length === 0 ? (
-          <div className="item-dashboard-empty">
-            <p>No items found</p>
-            <button className="item-dashboard-add-first" onClick={onAdd}>
-              Add your first item
-            </button>
-          </div>
-        ) : (
-          filteredItems.map(({ item, path }) => (
-            <Card
-              key={item.id}
-              item={item}
-              onEdit={item => onEdit(item, path)}
-              onDelete={item => onDelete(item, path)}
-              onView={onView}
-              path={path}
-            />
-          ))
-        )}
+            {filteredItems.length === 0 ? (
+              <div className="item-dashboard-empty">
+                <p>No items found</p>
+                <button className="item-dashboard-add-first" onClick={onAdd}>
+                  Add your first item
+                </button>
+              </div>
+            ) : (
+              filteredItems.map(({ item, path }) => (
+                <Card
+                  key={item.id}
+                  item={item}
+                  onEdit={item => onEdit(item, path)}
+                  onDelete={item => onDelete(item, path)}
+                  onView={handleOpenDetail}
+                  path={path}
+                />
+              ))
+            )}
           </div>
         </div>
       </div>
 
       <AddButton onClick={onAdd} />
+
+      {activeItemData && (
+        <ItemDetailModal
+          item={activeItemData.item}
+          path={activeItemData.path}
+          onClose={handleCloseDetail}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onVisit={onVisit}
+          folderFilters={folderFilters}
+          onToggleFolderFilter={handleFolderFilterToggle}
+          onClearFolderFilters={handleClearFolderFilters}
+        />
+      )}
     </div>
   );
 };

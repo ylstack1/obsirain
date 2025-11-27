@@ -3,7 +3,6 @@ import { Root, createRoot } from 'react-dom/client';
 import React from 'react';
 import { Dashboard } from '../components/Dashboard';
 import type ItemManagerPlugin from '../main';
-import { Item } from '../types';
 
 export const VIEW_TYPE_ITEM_MANAGER = 'item-manager-view';
 
@@ -59,7 +58,7 @@ export class ItemView extends ObsidianItemView {
         onEdit={(item, path) => this.plugin.openEditModal(item, path)}
         onDelete={(item, path) => this.plugin.deleteItem(item, path)}
         onRefresh={() => this.render()}
-        onView={(item: Item, path: string) => this.plugin.openItemDetailView(item, path)}
+        onVisit={(path: string) => this.plugin.openItemFile(path)}
       />
     );
   }

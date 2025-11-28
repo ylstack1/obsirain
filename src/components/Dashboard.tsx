@@ -147,31 +147,31 @@ export const Dashboard: React.FC<DashboardProps> = ({
       </div>
 
       <div className="item-dashboard-content">
-        <div className="item-dashboard-sidebar">
-          <Search value={searchQuery} onChange={setSearchQuery} />
+        <div className="item-dashboard-left">
+          <FolderTree
+            tree={tree}
+            selectedFolder={selectedFolder}
+            onFolderSelect={handleFolderSelect}
+            onItemSelect={(path) => {
+              const itemData = items.find(i => i.path === path);
+              if (itemData) {
+                handleOpenDetail(itemData.item, itemData.path);
+              }
+            }}
+          />
+        </div>
 
+        <div className="item-dashboard-main">
           <div className="item-dashboard-filters">
+            <Search value={searchQuery} onChange={setSearchQuery} />
             <TagFilter
               tags={allTags}
               selectedTags={selectedTags}
               onTagToggle={handleTagToggle}
               onClearAll={handleClearTags}
             />
-            <FolderTree
-              tree={tree}
-              selectedFolder={selectedFolder}
-              onFolderSelect={handleFolderSelect}
-              onItemSelect={(path) => {
-                const itemData = items.find(i => i.path === path);
-                if (itemData) {
-                  handleOpenDetail(itemData.item, itemData.path);
-                }
-              }}
-            />
           </div>
-        </div>
 
-        <div className="item-dashboard-main">
           <div className="item-dashboard-stats">
             <span>
               Showing {filteredItems.length} of {items.length} items

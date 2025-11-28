@@ -69,7 +69,7 @@ export const FolderTree: React.FC<FolderTreeProps> = ({
               </span>
             )}
             <span className="item-folder-tree-icon">
-              {isFolder ? (isExpanded ? '📂' : '📁') : '📄'}
+              {isFolder ? (isExpanded ? '📂' : '📁') : '🔗'}
             </span>
             <span className="item-folder-tree-name">{node.name}</span>
           </button>

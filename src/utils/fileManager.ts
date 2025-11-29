@@ -88,6 +88,7 @@ export class FileManager {
       item.collectionParentId ? `collectionParentId: ${item.collectionParentId}` : '',
       item.banner ? `banner: ${item.banner}` : '',
       item.type ? `type: ${item.type}` : '',
+      item.icon ? `icon: ${item.icon}` : '',
       'tags:',
       tagList,
       '---',
@@ -180,6 +181,7 @@ export class FileManager {
       collectionParentId: typeof data.collectionParentId === 'string' ? data.collectionParentId : undefined,
       banner: typeof data.banner === 'string' ? data.banner : undefined,
       type: typeof data.type === 'string' ? data.type : undefined,
+      icon: typeof data.icon === 'string' ? data.icon : undefined,
       createdAt: createdAt,
       updatedAt: updatedAt,
     } as Item;
@@ -199,7 +201,7 @@ export class FileManager {
     return name.replace(/[\\/:*?"<>|]/g, '-').trim();
   }
 
-  async getHierarchicalTree(): Promise<TreeNode[]> {
+  async getHierarchicalTree(folderIcons?: Record<string, string>): Promise<TreeNode[]> {
     const items = await this.getAllItems();
     const tree: Record<string, TreeNode> = {};
 
@@ -216,6 +218,8 @@ export class FileManager {
         path,
         type: 'folder',
         children: [],
+        icon: folderIcons?.[path],
+        itemCount: 0,
       };
       tree[path] = node;
 
@@ -246,6 +250,7 @@ export class FileManager {
         path: path,
         type: 'item',
         item: item,
+        icon: item.icon,
       };
 
       if (folderNode.children) {
@@ -253,13 +258,26 @@ export class FileManager {
       }
     }
 
-    // 3. Filter for root nodes (nodes without a parent in the tree)
+    // 3. Calculate item counts for folders recursively
+    const calculateItemCount = (node: TreeNode): number => {
+      if (node.type === 'item') return 1;
+      let count = 0;
+      if (node.children) {
+        for (const child of node.children) {
+          count += calculateItemCount(child);
+        }
+      }
+      node.itemCount = count;
+      return count;
+    };
+
+    // 4. Filter for root nodes (nodes without a parent in the tree)
     const rootNodes = Object.values(tree).filter(node => {
       const parentPath = node.path.substring(0, node.path.lastIndexOf('/'));
       return !parentPath || !tree[parentPath];
     });
 
-    // 4. Sort children (folders first, then items)
+    // 5. Sort children (folders first, then items)
     const sortTree = (nodes: TreeNode[]) => {
       nodes.sort((a, b) => {
         if (a.type === 'folder' && b.type === 'item') return -1;
@@ -274,6 +292,9 @@ export class FileManager {
     };
 
     sortTree(rootNodes);
+
+    // Calculate item counts for all nodes
+    rootNodes.forEach(node => calculateItemCount(node));
 
     return rootNodes;
   }

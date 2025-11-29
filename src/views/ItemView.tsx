@@ -46,7 +46,7 @@ export class ItemView extends ObsidianItemView {
     if (!this.root) return;
 
     const items = await this.plugin.fileManager.getAllItems();
-    const tree = await this.plugin.fileManager.getHierarchicalTree();
+    const tree = await this.plugin.fileManager.getHierarchicalTree(this.plugin.settings.folderIcons);
     const allTags = await this.plugin.fileManager.getAllTags();
 
     this.root.render(
@@ -59,6 +59,9 @@ export class ItemView extends ObsidianItemView {
         onDelete={(item, path) => this.plugin.deleteItem(item, path)}
         onRefresh={() => this.render()}
         onVisit={(path: string) => this.plugin.openItemFile(path)}
+        resolveIcon={(iconPath: string) => this.plugin.resolveIconPath(iconPath)}
+        openIconPicker={(currentIcon, onSelect) => this.plugin.openIconPicker(currentIcon, onSelect)}
+        onFolderIconChange={(folderPath, iconPath) => this.plugin.setFolderIcon(folderPath, iconPath)}
       />
     );
   }

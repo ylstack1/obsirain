@@ -11,6 +11,7 @@ export interface Item {
   collectionParentId?: string; // Optional for sub-collections
   banner?: string; // URL for the banner image
   type?: string; // e.g., 'link', 'article'
+  icon?: string; // Custom icon path from .obsidian/icons folder
   createdAt: string;
   updatedAt: string;
 }
@@ -19,12 +20,14 @@ export interface PluginSettings {
   defaultFolder: string;
   predefinedTags: string[];
   enableAutoSave: boolean;
+  folderIcons: Record<string, string>; // Maps folder paths to icon paths
 }
 
 export const DEFAULT_SETTINGS: PluginSettings = {
   defaultFolder: 'Items',
   predefinedTags: ['important', 'todo', 'reference', 'project'],
   enableAutoSave: true,
+  folderIcons: {},
 };
 
 export interface TreeNode {
@@ -33,4 +36,6 @@ export interface TreeNode {
   type: 'folder' | 'item';
   children?: TreeNode[];
   item?: Item; // Only present if type is 'item'
+  icon?: string; // Custom icon for this node
+  itemCount?: number; // Only meaningful for folders
 }

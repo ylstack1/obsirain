@@ -2,6 +2,7 @@ import { App, Modal, Notice } from 'obsidian';
 import { Item } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 import { FileManager } from '../utils/fileManager';
+import { IconPickerModal } from './IconPickerModal';
 
 export class ItemModal extends Modal {
   private item: Item | null;
@@ -9,6 +10,7 @@ export class ItemModal extends Modal {
   private fileManager: FileManager;
   private predefinedTags: string[];
   private defaultFolder: string;
+  private selectedIcon: string | null = null;
 
   constructor(
     app: App,
@@ -24,6 +26,7 @@ export class ItemModal extends Modal {
     this.fileManager = fileManager;
     this.predefinedTags = predefinedTags;
     this.defaultFolder = defaultFolder;
+    this.selectedIcon = item?.icon ?? null;
   }
 
   onOpen() {
@@ -102,6 +105,56 @@ export class ItemModal extends Modal {
       value: this.item?.description || '',
     });
     descInput.addClass('item-modal-textarea');
+
+    // Icon picker
+    const iconContainer = contentEl.createDiv({ cls: 'item-modal-field item-modal-icon-field' });
+    iconContainer.createEl('label', { text: 'Icon (optional)' });
+    const iconPreview = iconContainer.createDiv({ cls: 'item-modal-icon-preview' });
+
+    const refreshIconPreview = () => {
+      iconPreview.empty();
+      if (!this.selectedIcon) {
+        iconPreview.createSpan({ text: 'No icon selected' });
+        return;
+      }
+      const resourcePath = this.app.vault.adapter.getResourcePath(this.selectedIcon);
+      const previewWrapper = iconPreview.createDiv({ cls: 'item-modal-icon-preview-inner' });
+      const svgObject = previewWrapper.createEl('object', {
+        cls: 'item-modal-icon-svg',
+        attr: { data: resourcePath, type: 'image/svg+xml' },
+      });
+      svgObject.addEventListener('error', () => {
+        svgObject.replaceWith(previewWrapper.createSpan({ text: '🖼️' }));
+      });
+      previewWrapper.createSpan({ cls: 'item-modal-icon-label', text: this.selectedIcon.split('/').pop() || '' });
+    };
+
+    const iconActions = iconContainer.createDiv({ cls: 'item-modal-icon-actions' });
+    const pickIconButton = iconActions.createEl('button', {
+      text: this.selectedIcon ? 'Change icon' : 'Select icon',
+      cls: 'item-modal-icon-btn',
+    });
+    pickIconButton.addEventListener('click', e => {
+      e.preventDefault();
+      new IconPickerModal(this.app, this.selectedIcon, iconPath => {
+        this.selectedIcon = iconPath;
+        refreshIconPreview();
+        pickIconButton.setText(this.selectedIcon ? 'Change icon' : 'Select icon');
+      }).open();
+    });
+
+    const clearIconButton = iconActions.createEl('button', {
+      text: 'Clear',
+      cls: 'item-modal-icon-btn mod-muted',
+    });
+    clearIconButton.addEventListener('click', e => {
+      e.preventDefault();
+      this.selectedIcon = null;
+      refreshIconPreview();
+      pickIconButton.setText('Select icon');
+    });
+
+    refreshIconPreview();
 
     // Folder input (Dropdown)
     const folderContainer = contentEl.createDiv({ cls: 'item-modal-field' });
@@ -224,6 +277,7 @@ export class ItemModal extends Modal {
         collectionParentId: this.item?.collectionParentId || collectionParentId,
         banner: banner || undefined,
         type: this.item?.type || 'link', // Default to 'link'
+        icon: this.selectedIcon || undefined,
         createdAt: this.item?.createdAt || now,
         updatedAt: now,
       };

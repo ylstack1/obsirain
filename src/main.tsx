@@ -3,6 +3,7 @@ import { PluginSettings, DEFAULT_SETTINGS, Item } from './types';
 import { ItemManagerSettingTab } from './settings';
 import { FileManager } from './utils/fileManager';
 import { ItemModal } from './modals/ItemModal';
+import { IconPickerModal } from './modals/IconPickerModal';
 import { ItemView, VIEW_TYPE_ITEM_MANAGER } from './views/ItemView';
 import { registerCommands } from './commands';
 
@@ -91,6 +92,25 @@ export default class ItemManagerPlugin extends Plugin {
         await view.render();
       }
     }
+  }
+
+  openIconPicker(currentIcon: string | null, onSelect: (iconPath: string | null) => void): void {
+    new IconPickerModal(this.app, currentIcon, onSelect).open();
+  }
+
+  async setFolderIcon(folderPath: string, iconPath: string | null): Promise<void> {
+    if (iconPath) {
+      this.settings.folderIcons[folderPath] = iconPath;
+    } else {
+      delete this.settings.folderIcons[folderPath];
+    }
+    await this.saveSettings();
+    await this.refreshView();
+  }
+
+  resolveIconPath(iconPath: string): string | undefined {
+    if (!iconPath) return undefined;
+    return this.app.vault.adapter.getResourcePath(iconPath);
   }
 
   openAddModal(): void {

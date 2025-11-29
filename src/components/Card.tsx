@@ -7,15 +7,27 @@ interface CardProps {
   onDelete: (item: Item) => void;
   onView: (item: Item, path: string) => void;
   path: string;
+  resolveIcon?: (iconPath: string) => string | undefined;
 }
 
-export const Card: React.FC<CardProps> = ({ item, onEdit, onDelete, onView, path }) => {
+export const Card: React.FC<CardProps> = ({ item, onEdit, onDelete, onView, path, resolveIcon }) => {
   const domain = item.link ? (new URL(item.link).hostname) : '';
+  const iconSrc = item.icon && resolveIcon ? resolveIcon(item.icon) : undefined;
 
   return (
     <div className="item-card" onClick={() => onView(item, path)}>
       <div className="item-card-header">
-        <h3 className="item-card-title">{item.title}</h3>
+        <div className="item-card-icon">
+          {iconSrc ? (
+            <img src={iconSrc} alt="Item icon" className="item-card-icon-img" />
+          ) : (
+            <span className="item-card-icon-placeholder">🔗</span>
+          )}
+        </div>
+        <div className="item-card-title-area">
+          <h3 className="item-card-title">{item.title}</h3>
+          <span className="item-card-folder">{item.collectionTitle}</span>
+        </div>
         <div className="item-card-actions">
           <button
             className="item-card-action-btn"
@@ -57,7 +69,6 @@ export const Card: React.FC<CardProps> = ({ item, onEdit, onDelete, onView, path
         </div>
       )}
       <div className="item-card-footer">
-        <span className="item-card-folder">📁 {item.collectionTitle}</span>
         <span className="item-card-date">
           {new Date(item.updatedAt).toLocaleDateString()}
         </span>

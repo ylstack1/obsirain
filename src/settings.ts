@@ -56,5 +56,59 @@ export class ItemManagerSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           })
       );
+
+    containerEl.createEl('h3', { text: 'Tab Icons' });
+
+    new Setting(containerEl)
+      .setName('Analytics tab icon')
+      .setDesc('Icon for the Analytics tab')
+      .addText(text =>
+        text
+          .setPlaceholder('📊')
+          .setValue(this.plugin.settings.tabIcons.analytics)
+          .onChange(async value => {
+            this.plugin.settings.tabIcons.analytics = value || '📊';
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(containerEl)
+      .setName('Collections tab icon')
+      .setDesc('Icon for the Collections tab')
+      .addText(text =>
+        text
+          .setPlaceholder('📁')
+          .setValue(this.plugin.settings.tabIcons.collections)
+          .onChange(async value => {
+            this.plugin.settings.tabIcons.collections = value || '📁';
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(containerEl)
+      .setName('Items tab icon')
+      .setDesc('Icon for the All Items tab')
+      .addText(text =>
+        text
+          .setPlaceholder('🔗')
+          .setValue(this.plugin.settings.tabIcons.items)
+          .onChange(async value => {
+            this.plugin.settings.tabIcons.items = value || '🔗';
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(containerEl)
+      .setName('Search tab icon')
+      .setDesc('Icon for the Search tab')
+      .addText(text =>
+        text
+          .setPlaceholder('🔍')
+          .setValue(this.plugin.settings.tabIcons.search)
+          .onChange(async value => {
+            this.plugin.settings.tabIcons.search = value || '🔍';
+            await this.plugin.saveSettings();
+          })
+      );
   }
 }

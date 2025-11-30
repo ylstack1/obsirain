@@ -1,7 +1,7 @@
 import { ItemView as ObsidianItemView, WorkspaceLeaf } from 'obsidian';
 import { Root, createRoot } from 'react-dom/client';
 import React from 'react';
-import { Dashboard } from '../components/Dashboard';
+import { TabbedView } from '../components/TabbedView';
 import type ItemManagerPlugin from '../main';
 
 export const VIEW_TYPE_ITEM_MANAGER = 'item-manager-view';
@@ -50,10 +50,11 @@ export class ItemView extends ObsidianItemView {
     const allTags = await this.plugin.fileManager.getAllTags();
 
     this.root.render(
-      <Dashboard
+      <TabbedView
         items={items}
         tree={tree}
         allTags={allTags}
+        tabIcons={this.plugin.settings.tabIcons}
         onAdd={() => this.plugin.openAddModal()}
         onEdit={(item, path) => this.plugin.openEditModal(item, path)}
         onDelete={(item, path) => this.plugin.deleteItem(item, path)}

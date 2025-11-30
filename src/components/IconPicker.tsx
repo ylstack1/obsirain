@@ -42,7 +42,7 @@ export const IconPicker: React.FC<IconPickerProps> = ({
 
     const groups: Record<string, string[]> = {};
 
-    const processFolder = (folder: TFolder, relativePath: string = '') => {
+    const processFolder = (folder: TFolder, relativePath = '') => {
       for (const child of folder.children) {
         if (child instanceof TFile && child.extension === 'svg') {
           const groupName = relativePath || 'root';

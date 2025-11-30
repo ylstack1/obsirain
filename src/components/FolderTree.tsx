@@ -71,40 +71,40 @@ export const FolderTree: React.FC<FolderTreeProps> = ({
               <img
                 src={iconSrc}
                 alt={node.name}
-                className="item-folder-tree-icon-img"
+                className="folder-tree-icon-img"
               />
             );
           }
         }
         if (isFolder) {
-          return <span className="item-folder-tree-icon">{isExpanded ? '📂' : '📁'}</span>;
+          return <span className="folder-tree-icon">{isExpanded ? '📂' : '📁'}</span>;
         }
-        return <span className="item-folder-tree-icon">🔗</span>;
+        return <span className="folder-tree-icon">🔗</span>;
       };
 
       return (
-        <div key={node.path} className="item-folder-tree-node">
+        <div key={node.path} className="folder-tree-node">
           <button
-            className={`item-folder-tree-button ${isSelected ? 'active' : ''} ${isItem ? 'item-file' : 'item-folder'}`}
+            className={`folder-tree-button ${isSelected ? 'active' : ''} ${isItem ? 'item' : ''}`}
             style={{ paddingLeft: `${level * 16 + 8}px` }}
             onClick={handleNodeClick}
           >
             {isFolder && hasChildren && (
               <span
-                className={`item-folder-tree-collapse-icon ${isExpanded ? 'is-expanded' : ''}`}
+                className={`folder-tree-collapse-icon ${isExpanded ? 'is-expanded' : ''}`}
                 onClick={handleExpandClick}
               >
                 {isExpanded ? '▼' : '►'}
               </span>
             )}
             {renderIcon()}
-            <span className="item-folder-tree-name">{node.name}</span>
+            <span className="folder-tree-name">{node.name}</span>
             {isFolder && node.itemCount !== undefined && node.itemCount > 0 && (
-              <span className="item-folder-tree-count">{node.itemCount}</span>
+              <span className="folder-tree-count">{node.itemCount}</span>
             )}
             {isFolder && onFolderIconRequest && (
               <button
-                className="item-folder-tree-icon-btn"
+                className="folder-tree-icon-btn"
                 onClick={e => {
                   e.stopPropagation();
                   onFolderIconRequest(node);
@@ -117,7 +117,7 @@ export const FolderTree: React.FC<FolderTreeProps> = ({
             )}
           </button>
           {isFolder && hasChildren && isExpanded && (
-            <div className="item-folder-tree-children">
+            <div className="folder-tree-children">
               {renderTree(node.children!, level + 1)}
             </div>
           )}

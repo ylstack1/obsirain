@@ -27,6 +27,7 @@ export interface PluginSettings {
     items: string;
     search: string;
   };
+  defaultFolderIcon: string; // Default icon for new folders
 }
 
 export const DEFAULT_SETTINGS: PluginSettings = {
@@ -40,6 +41,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     items: '🔗',
     search: '🔍',
   },
+  defaultFolderIcon: '📁', // Default icon for new folders
 };
 
 export interface TreeNode {

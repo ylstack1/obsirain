@@ -128,7 +128,7 @@ export const WebsiteView: React.FC<WebsiteViewProps> = ({
   }, [] as Array<{ name: string; path: string; itemCount: number }>);
 
   const renderAnalytics = () => (
-    <div className="website-section">
+    <div className="dashboard-section">
       <div className="stats-grid">
         <div className="stat-card">
           <div className="stat-icon">{tabIcons.analytics}</div>
@@ -198,7 +198,7 @@ export const WebsiteView: React.FC<WebsiteViewProps> = ({
   );
 
   const renderCollections = () => (
-    <div className="website-section">
+    <div className="dashboard-section">
       <div className="content-card full-width">
         <h3>Collections</h3>
         <FolderTree
@@ -224,7 +224,7 @@ export const WebsiteView: React.FC<WebsiteViewProps> = ({
   );
 
   const renderItems = () => (
-    <div className="website-section">
+    <div className="dashboard-section">
       <div className="items-header">
         <div className="items-info">
           Showing {filteredItems.length} of {items.length} items
@@ -264,7 +264,7 @@ export const WebsiteView: React.FC<WebsiteViewProps> = ({
   );
 
   const renderSearch = () => (
-    <div className="website-section">
+    <div className="dashboard-section">
       <div className="search-section">
         <div className="search-controls">
           <div className="search-input-wrapper">
@@ -335,49 +335,120 @@ export const WebsiteView: React.FC<WebsiteViewProps> = ({
         </div>
       </header>
 
-      {/* Navigation */}
-      <nav className={`website-nav ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
-        <div className="nav-content">
-          <button
-            className={`nav-item ${activeView === 'analytics' ? 'active' : ''}`}
-            onClick={() => setActiveView('analytics')}
-          >
-            <span className="nav-icon">{tabIcons.analytics}</span>
-            <span className="nav-label">Analytics</span>
-          </button>
-          <button
-            className={`nav-item ${activeView === 'collections' ? 'active' : ''}`}
-            onClick={() => setActiveView('collections')}
-          >
-            <span className="nav-icon">{tabIcons.collections}</span>
-            <span className="nav-label">Collections</span>
-          </button>
-          <button
-            className={`nav-item ${activeView === 'items' ? 'active' : ''}`}
-            onClick={() => setActiveView('items')}
-          >
-            <span className="nav-icon">{tabIcons.items}</span>
-            <span className="nav-label">All Items</span>
-          </button>
-          <button
-            className={`nav-item ${activeView === 'search' ? 'active' : ''}`}
-            onClick={() => setActiveView('search')}
-          >
-            <span className="nav-icon">{tabIcons.search}</span>
-            <span className="nav-label">Search</span>
-          </button>
-        </div>
-      </nav>
+      {/* Main Layout */}
+      <div className="website-layout">
+        {/* Desktop Sidebar */}
+        <aside className="desktop-sidebar">
+          <div className="sidebar-content">
+            <div className="sidebar-header">
+              <h2>Navigation</h2>
+            </div>
+            <nav className="sidebar-nav">
+              <button
+                className={`sidebar-nav-item ${activeView === 'analytics' ? 'active' : ''}`}
+                onClick={() => setActiveView('analytics')}
+              >
+                <span className="nav-icon">{tabIcons.analytics}</span>
+                <span className="nav-label">Analytics</span>
+              </button>
+              <button
+                className={`sidebar-nav-item ${activeView === 'collections' ? 'active' : ''}`}
+                onClick={() => setActiveView('collections')}
+              >
+                <span className="nav-icon">{tabIcons.collections}</span>
+                <span className="nav-label">Collections</span>
+              </button>
+              <button
+                className={`sidebar-nav-item ${activeView === 'items' ? 'active' : ''}`}
+                onClick={() => setActiveView('items')}
+              >
+                <span className="nav-icon">{tabIcons.items}</span>
+                <span className="nav-label">All Items</span>
+              </button>
+              <button
+                className={`sidebar-nav-item ${activeView === 'search' ? 'active' : ''}`}
+                onClick={() => setActiveView('search')}
+              >
+                <span className="nav-icon">{tabIcons.search}</span>
+                <span className="nav-label">Search</span>
+              </button>
+            </nav>
 
-      {/* Main Content */}
-      <main className="website-main">
-        <div className="main-content">
-          {activeView === 'analytics' && renderAnalytics()}
-          {activeView === 'collections' && renderCollections()}
-          {activeView === 'items' && renderItems()}
-          {activeView === 'search' && renderSearch()}
-        </div>
-      </main>
+            {/* Quick Stats */}
+            <div className="sidebar-stats">
+              <h3>Quick Stats</h3>
+              <div className="sidebar-stat">
+                <span className="stat-label">Collections</span>
+                <span className="stat-value">{tree.length}</span>
+              </div>
+              <div className="sidebar-stat">
+                <span className="stat-label">Items</span>
+                <span className="stat-value">{items.length}</span>
+              </div>
+              <div className="sidebar-stat">
+                <span className="stat-label">Tags</span>
+                <span className="stat-value">{allTags.length}</span>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        {/* Mobile Navigation */}
+        <nav className={`mobile-nav ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
+          <div className="mobile-nav-content">
+            <button
+              className={`mobile-nav-item ${activeView === 'analytics' ? 'active' : ''}`}
+              onClick={() => {
+                setActiveView('analytics');
+                setIsMobileMenuOpen(false);
+              }}
+            >
+              <span className="nav-icon">{tabIcons.analytics}</span>
+              <span className="nav-label">Analytics</span>
+            </button>
+            <button
+              className={`mobile-nav-item ${activeView === 'collections' ? 'active' : ''}`}
+              onClick={() => {
+                setActiveView('collections');
+                setIsMobileMenuOpen(false);
+              }}
+            >
+              <span className="nav-icon">{tabIcons.collections}</span>
+              <span className="nav-label">Collections</span>
+            </button>
+            <button
+              className={`mobile-nav-item ${activeView === 'items' ? 'active' : ''}`}
+              onClick={() => {
+                setActiveView('items');
+                setIsMobileMenuOpen(false);
+              }}
+            >
+              <span className="nav-icon">{tabIcons.items}</span>
+              <span className="nav-label">All Items</span>
+            </button>
+            <button
+              className={`mobile-nav-item ${activeView === 'search' ? 'active' : ''}`}
+              onClick={() => {
+                setActiveView('search');
+                setIsMobileMenuOpen(false);
+              }}
+            >
+              <span className="nav-icon">{tabIcons.search}</span>
+              <span className="nav-label">Search</span>
+            </button>
+          </div>
+        </nav>
+
+        {/* Main Content */}
+        <main className="website-main">
+          <div className="main-content">
+            {activeView === 'analytics' && renderAnalytics()}
+            {activeView === 'collections' && renderCollections()}
+            {activeView === 'items' && renderItems()}
+            {activeView === 'search' && renderSearch()}
+          </div>
+        </main>
+      </div>
 
       {/* Mobile overlay */}
       {isMobileMenuOpen && (

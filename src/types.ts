@@ -21,6 +21,13 @@ export interface PluginSettings {
   predefinedTags: string[];
   enableAutoSave: boolean;
   folderIcons: Record<string, string>; // Maps folder paths to icon paths
+  tabIcons: {
+    analytics: string;
+    collections: string;
+    items: string;
+    search: string;
+  };
+  defaultFolderIcon: string; // Default icon for new folders
 }
 
 export const DEFAULT_SETTINGS: PluginSettings = {
@@ -28,6 +35,13 @@ export const DEFAULT_SETTINGS: PluginSettings = {
   predefinedTags: ['important', 'todo', 'reference', 'project'],
   enableAutoSave: true,
   folderIcons: {},
+  tabIcons: {
+    analytics: '📊',
+    collections: '📁',
+    items: '🔗',
+    search: '🔍',
+  },
+  defaultFolderIcon: '📁', // Default icon for new folders
 };
 
 export interface TreeNode {
